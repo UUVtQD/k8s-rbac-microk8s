@@ -1,0 +1,24 @@
+microk8s.status 
+microk8s.start
+microk8s.status 
+microk8s.inspect
+microk8s.enable rbac
+microk8s.status
+microk8s.kubectl create namespace office
+microk8s.kubectl get namespaces
+openssl genrsa -out employee.key 2048
+openssl req -new -key employee.key -out employee.csr -subj "/CN=employee/O=bitnami"
+export CA_LOCATION=/var/snap/microk8s/current/certs
+openssl x509 -req -in employee.csr -CA $CA_LOCATION/ca.crt -CAkey $CA_LOCATION/ca.key -CAcreateserial -out employee.crt -days 792
+microk8s.config 
+microk8s.kubectl config set-credentials employee --client-certificate=/home/sergio/work/tmp/microk8s/employee.crt --client-key=/home/sergio/work/tmp/microk8s/employee.key
+microk8s.kubectl config set-context employee-context --cluster=microk8s-cluster --namespace=office --user=employee
+microk8s.kubectl --context=employee-context get po
+vim 1.role-deployment-manager.yaml 
+microk8s.kubectl create -f 1.role-deployment-manager.yaml
+microk8s.kubectl get roles -A
+vim 2.rolebinding-deployment-manager.yaml
+microk8s.kubectl create -f 2.rolebinding-deployment-manager.yaml 
+microk8s.kubectl --context=employee-context get po
+microk8s.kubectl --context=employee-context run --image bitnami/dokuwiki testdokuwiki
+microk8s.kubectl --context=employee-context get po
